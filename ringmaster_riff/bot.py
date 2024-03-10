@@ -14,7 +14,7 @@ user_audio_files = {
     "169178004684144650": "C:\\Users\\jadis\\OneDrive\\discord_bots\\ringmaster_riff\\audio\\undertaker.mp3", # Hamood
     "304642517343928321": "C:\\Users\\jadis\\OneDrive\\discord_bots\\ringmaster_riff\\audio\\tripleh.mp3", # Ahmad
     "169793619908231168": "C:\\Users\\jadis\\OneDrive\\discord_bots\\ringmaster_riff\\audio\\randyorton.mp3", # Scott
-    "641995250067570719": "C:\\Users\\jadis\\OneDrive\\discord_bots\\ringmaster_riff\\audio\\batista.mp3", # Farris
+    "641995250067570719": "C:\\Users\\jadis\\OneDrive\\discord_bots\\ringmaster_riff\\audio\\jeffhardy.mp3", # Farris
     "671778028178898944": "C:\\Users\\jadis\\OneDrive\\discord_bots\\ringmaster_riff\\audio\\reymysterio.mp3" # Ben
     # Add more user IDs and corresponding audio files as needed
 }
