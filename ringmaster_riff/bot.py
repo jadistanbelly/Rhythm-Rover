@@ -10,7 +10,7 @@ client = discord.Client(intents=intents)
 # Dictionary to map user IDs to audio file paths
 user_audio_files = {
     "426031900633858048": "C:\\Users\\jadis\\OneDrive\\discord_bots\\ringmaster_riff\\audio\\johncena.mp3", # Jad
-    "169183728277389312": "C:\\Users\\jadis\OneDrive\\discord_bots\\ringmaster_riff\\audio\\therock.mp3", # Gogo
+    "169183728277389312": "C:\\Users\\jadis\\OneDrive\\discord_bots\\ringmaster_riff\\audio\\therock.mp3", # Gogo
     "169178004684144650": "C:\\Users\\jadis\\OneDrive\\discord_bots\\ringmaster_riff\\audio\\undertaker.mp3", # Hamood
     "304642517343928321": "C:\\Users\\jadis\\OneDrive\\discord_bots\\ringmaster_riff\\audio\\tripleh.mp3", # Ahmad
     "169793619908231168": "C:\\Users\\jadis\\OneDrive\\discord_bots\\ringmaster_riff\\audio\\randyorton.mp3", # Scott
