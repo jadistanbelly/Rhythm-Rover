@@ -8,10 +8,16 @@ import shelve
 import os
 
 # Add path for audio files to save at 
-path = "audio\\"
+path = "C:\\Users\\jadis\\OneDrive\\discord_bots\\RhythmRover\\audio\\"
 
 # Add owner user id here to run owner specific commands
 owner = 426031900633858048
+
+# Add server ids you would like to target
+servers=[
+    discord.Object(id=1203407209397231686), # Personal Server
+    discord.Object(id=169178811429027840) # Og Crue Server
+]
 
 # Function to download audio from url using youtube_dl
 def download_audio(url, output_path, start, end):
@@ -50,7 +56,7 @@ audio_queue = deque(maxlen=3)  # Set the queue limit to 3
 @client.event
 async def on_ready():
     print(f"Logged in as {client.user.name} ({client.user.id})")
-    await tree.sync(guild=discord.Object(id=169178811429027840)) # Run for auto sync everytime bot boots up
+    #await tree.sync(guild=discord.Object(id=169178811429027840)) # Run for auto sync everytime bot boots up
 
 @client.event
 async def on_voice_state_update(member, before, after):
@@ -81,10 +87,7 @@ async def play_next_audio(channel):
 @tree.command(
     name="request",
     description="Tell me what intro song you would like",
-    guilds=[
-        discord.Object(id=1203407209397231686), # Personal Server
-        discord.Object(id=169178811429027840) # Og Crue Server
-    ]
+    #guilds=servers
 )
 # Provide instructions to user
 @app_commands.describe(video_url = "Type your url", start = "Where do you want to start the download?", end = "Where do you want to end the download?")
@@ -100,6 +103,9 @@ async def request(interaction: discord.Interaction, video_url: str, start: int, 
             if str(interaction.user.id) in user_audio_files:
                 os.remove(user_audio_files[str(interaction.user.id)])
 
+            # Defer response to user to get 15 min window for follow up message
+            await interaction.response.defer(ephemeral = True)
+
             # Download the video 
             audio_title = download_audio(video_url, path, start, end)
 
@@ -112,8 +118,12 @@ async def request(interaction: discord.Interaction, video_url: str, start: int, 
             # Save changes immediately
             audio_db.sync() 
 
+            # Sleep for 3 seconds to ensure initial response window passes
+            await asyncio.sleep(3) # Can probably be shortened some more
+
             # Respond back to user
-            await interaction.response.send_message("Your intro has been added", ephemeral = True)
+            await interaction.edit_original_response(content="Your intro has been added")
+
 
         else:
             # Check if user already has an audio file if so delete before downloading a new one
@@ -122,7 +132,10 @@ async def request(interaction: discord.Interaction, video_url: str, start: int, 
 
             # Overwrite user error of timestamp total higher than 10 
             end = start+10
-            
+
+            # Defer response to user to get 15 min window for follow up message
+            await interaction.response.defer(ephemeral = True)
+
             # Download the video 
             audio_title = download_audio(video_url, path, start, end)
 
@@ -133,10 +146,14 @@ async def request(interaction: discord.Interaction, video_url: str, start: int, 
             audio_db['user_audio_paths'] = user_audio_files
 
             # Save changes immediately
-            audio_db.sync() 
+            audio_db.sync()
+
+            # Sleep for 3 seconds to ensure initial response window passes
+            await asyncio.sleep(3) # Can probably be shortened some more
 
             # Respond back to user
-            await interaction.response.send_message("Your intro has been added", ephemeral = True)
+            await interaction.edit_original_response(content="Your intro has been added")
+
     except asyncio.TimeoutError:
         await interaction.response.send_message("You took too long to respond. Please try again.", ephemeral = True)
 
@@ -145,10 +162,7 @@ async def request(interaction: discord.Interaction, video_url: str, start: int, 
 @tree.command(
     name="sync",
     description="Owner only",
-    guilds=[
-        discord.Object(id=1203407209397231686), # Personal Server
-        discord.Object(id=169178811429027840) # Og Crue Server
-    ]
+    #guilds=servers
 )
 
 # Owner only command to sync command trees in all servers that bot is deployed in
