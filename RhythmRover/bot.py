@@ -5,6 +5,7 @@ from discord import app_commands
 import yt_dlp
 from yt_dlp.utils import download_range_func
 import shelve
+import os
 
 # Add path for audio files to save at 
 path = "audio\\"
@@ -17,14 +18,16 @@ def download_audio(url, output_path, start, end):
     ydl_opts = {
         'extract_audio': True,
         'format': 'bestaudio',
-        'outtmpl': f'{output_path}''%(title)s.mp3', # Title audio file as per video title from url
+        'outtmpl': f'{output_path}''%(title)s'f'{str(start)}'f'{str(end)}.mp3', # Title audio file as per video title from url including timestamps
         'download_ranges': download_range_func(None, [(start, end)]), # Specified timestamps in int format
         'force_keyframes_at_cuts': True
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info_dict = ydl.extract_info(url, download = True)
-        video_title = info_dict['title']
-        print(video_title)
+        base_title = info_dict['title']
+        print(f'Base Title: {base_title}')
+        video_title = f'{base_title}'f'{str(start)}'f'{str(end)}'
+        print(f'Full Title: {video_title}')
         ydl.download([url])
     return video_title
 
@@ -55,10 +58,9 @@ async def on_voice_state_update(member, before, after):
         if after.channel:  # User joined a voice channel
             user_id = str(member.id)
             if user_id in user_audio_files:
-                print(user_audio_files)
+                #print(f'User Dictionary: {user_audio_files}')
                 audio_file_path = user_audio_files[user_id]
-                print(user_id)
-                print(audio_file_path)
+                #print(audio_file_path)
                 audio_queue.append(audio_file_path)  # Add to the queue
 
                 # If the queue is not empty and the bot is not currently playing
@@ -70,6 +72,7 @@ async def play_next_audio(channel):
         audio_file_path = audio_queue.popleft()
         vc = await channel.connect()
         vc.play(discord.FFmpegPCMAudio(executable="C:\\ffmpeg\\tools\\ffmpeg\\bin\\ffmpeg.exe", source=audio_file_path))
+        print(f'Currently Playing: {audio_file_path}')
         while vc.is_playing():
             await asyncio.sleep(1)
         await vc.disconnect()
@@ -90,10 +93,12 @@ async def play_next_audio(channel):
 async def request(interaction: discord.Interaction, video_url: str, start: int, end: int):
 
     try:
-        if end-start <= 10: 
+        # Check if timestamp is 10 sec or less
+        if end-start <= 10:
 
-            # Open shelve if closed
-            audio_db.open()
+            # Check if user already has an audio file if so delete before downloading a new one
+            if str(interaction.user.id) in user_audio_files:
+                os.remove(user_audio_files[str(interaction.user.id)])
 
             # Download the video 
             audio_title = download_audio(video_url, path, start, end)
@@ -105,20 +110,21 @@ async def request(interaction: discord.Interaction, video_url: str, start: int, 
             audio_db['user_audio_paths'] = user_audio_files
 
             # Save changes immediately
-            audio_db.sync()  
-
-            # Close the shelve database when done
-            audio_db.close()
+            audio_db.sync() 
 
             # Respond back to user
             await interaction.response.send_message("Your intro has been added", ephemeral = True)
 
         else:
-            # Open shelve if closed
-            audio_db.open()
+            # Check if user already has an audio file if so delete before downloading a new one
+            if str(interaction.user.id) in user_audio_files:
+                os.remove(user_audio_files[str(interaction.user.id)])
+
+            # Overwrite user error of timestamp total higher than 10 
+            end = start+10
             
             # Download the video 
-            audio_title = download_audio(video_url, path, start, start+10)
+            audio_title = download_audio(video_url, path, start, end)
 
             # Insert User ID and path of downloaded audio file
             user_audio_files[str(interaction.user.id)] = f'{path}{audio_title}.mp3'
@@ -127,10 +133,7 @@ async def request(interaction: discord.Interaction, video_url: str, start: int, 
             audio_db['user_audio_paths'] = user_audio_files
 
             # Save changes immediately
-            audio_db.sync()  
-
-            # Close the shelve database when done
-            audio_db.close()
+            audio_db.sync() 
 
             # Respond back to user
             await interaction.response.send_message("Your intro has been added", ephemeral = True)
