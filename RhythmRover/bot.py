@@ -6,6 +6,7 @@ import yt_dlp
 from yt_dlp.utils import download_range_func
 import shelve
 import os
+import subprocess
 
 # Add path for audio files to save at 
 path = "C:\\Users\\jadis\\OneDrive\\discord_bots\\RhythmRover\\audio\\"
@@ -19,23 +20,48 @@ servers=[
     discord.Object(id=169178811429027840) # Og Crue Server
 ]
 
-# Function to download audio from url using youtube_dl
+# Function to download audio from url using yt_dlp
 def download_audio(url, output_path, start, end):
     ydl_opts = {
         'extract_audio': True,
         'format': 'bestaudio',
-        'outtmpl': f'{output_path}''%(title)s'f'{str(start)}'f'{str(end)}.mp3', # Title audio file as per video title from url including timestamps
+        'outtmpl': f'{output_path}%(title)s{str(start)}{str(end)}.mp3', # Title audio file as per video title from url including timestamps
         'download_ranges': download_range_func(None, [(start, end)]), # Specified timestamps in int format
         'force_keyframes_at_cuts': True
     }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info_dict = ydl.extract_info(url, download = True)
-        base_title = info_dict['title']
-        print(f'Base Title: {base_title}')
-        video_title = f'{base_title}'f'{str(start)}'f'{str(end)}'
-        print(f'Full Title: {video_title}')
-        ydl.download([url])
-    return video_title
+    try: # Try just audio
+
+        # Get title of download
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download = True)
+            base_title = info_dict['title']
+            print(base_title)
+            video_title = f'{base_title}{str(start)}{str(end)}'
+            print(video_title)
+            ydl.download([url])
+            return video_title
+        
+    except: # fallback to video format
+        ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best'
+        ydl_opts['outtmpl'] = f'{output_path}%(title)s{str(start)}{str(end)}.mp4'
+
+        # Get title of download
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download = True)
+            base_title = info_dict['title']
+            print(base_title)
+            video_title = f'{base_title}{str(start)}{str(end)}'
+            print(video_title)
+            ydl.download([url])
+
+            # Convert to audio
+            subprocess.run(["ffmpeg", "-i", f'{output_path}{video_title}.mp4', "-vn", "-acodec", "libmp3lame", "-y", f'{output_path}{video_title}.mp3'])
+
+            # Delete Video
+            os.remove(f'{output_path}{video_title}.mp4')
+
+            # Return audio title
+            return video_title
 
 # Initialize the bot with intents (required for certain events)
 intents = discord.Intents.default()
@@ -101,7 +127,10 @@ async def request(interaction: discord.Interaction, video_url: str, start: int, 
 
             # Check if user already has an audio file if so delete before downloading a new one
             if str(interaction.user.id) in user_audio_files:
-                os.remove(user_audio_files[str(interaction.user.id)])
+                try:
+                    os.remove(user_audio_files[str(interaction.user.id)])
+                except:
+                    pass
 
             # Defer response to user to get 15 min window for follow up message
             await interaction.response.defer(ephemeral = True)
