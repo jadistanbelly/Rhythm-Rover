@@ -30,7 +30,7 @@ tree = app_commands.CommandTree(client)
 @client.event
 async def on_ready():
     print(f'Logged in as {client.user.name} ({client.user.id})')
-    #await tree.sync(guild=discord.Object(id=1203407209397231686)) # Run for auto sync everytime bot boots up
+    await tree.sync(guild=discord.Object(id=1203407209397231686)) # Run for auto sync everytime bot boots up
 
 # Create choices to user 
 class Share(str, enum.Enum):
@@ -41,7 +41,7 @@ class Share(str, enum.Enum):
 @tree.command(
     name="download",
     description="Download videos from links",
-    # guild=discord.Object(id=1203407209397231686) Add this to specify server for command
+    guild=discord.Object(id=1203407209397231686) # Add this to specify server for command
 )
 # Provide instructions to user
 @app_commands.describe(video_url = "Type your url", share = "Would you like to share this video with the channel?")
