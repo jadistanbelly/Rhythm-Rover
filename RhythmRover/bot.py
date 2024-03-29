@@ -104,7 +104,7 @@ async def play_next_audio(channel):
         audio_file_path = audio_queue.popleft()
         vc = await channel.connect()
         vc.play(discord.FFmpegPCMAudio(executable="C:\\ffmpeg\\tools\\ffmpeg\\bin\\ffmpeg.exe", source=audio_file_path))
-        print(f'Currently Playing: {audio_file_path}')
+        print(f'Currently Playing: {audio_file_path}', f'Queue total: {len(audio_queue)+1}') # Show what is playing and queue length
         while vc.is_playing():
             await asyncio.sleep(1)
         await vc.disconnect()
@@ -201,7 +201,24 @@ async def sync(interaction):
         await interaction.response.send_message('Command tree synced.', ephemeral = True)
     else:
         await interaction.response.send_message('You must be the owner to use this command!', ephemeral = True)
+        
+# Define the kill command 
+@tree.command(
+    name="kill",
+    description="Clear Queue",
+    #guilds=servers
+)
 
+# Owner only command to clear queue and prevent spamming
+async def kill(interaction):
+    if interaction.user.id == owner: 
+        try:
+            audio_queue.clear() # Clear queue
+            await interaction.response.send_message('Queue Cleared', ephemeral = True)
+        except Exception as e:
+            await interaction.response.send_message(f'Clearing failed. Error: {e}', ephemeral = True)
+    else:
+        await interaction.response.send_message('You must be the owner to use this command!', ephemeral = True)
 
 # Run the bot
 client.run("MTIyMTUzMDcyMTQ5MjAwOTA2MQ.GHwATW.4LerKAQ041vJ6XxDpzMFBrwrPgtVm86Sao-RN4")
