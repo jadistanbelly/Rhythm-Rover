@@ -10,12 +10,12 @@ import subprocess
 import re
 
 # Add path for audio files to save at 
-path = "C:\\Users\\jadis\\OneDrive\\discord_bots\\RhythmRover\\audio\\"
+path = "C:\\Users\\jadis\\OneDrive\\RhythmRover\\RhythmRover\\audio\\"
 
 # Add owner user id here to run owner specific commands
 owner = 426031900633858048
 
-# Add server ids you would like to target
+# Add server ids you would like to target OPTIONAL
 servers=[
     discord.Object(id=1203407209397231686), # Personal Server
     discord.Object(id=169178811429027840) # Og Crue Server
