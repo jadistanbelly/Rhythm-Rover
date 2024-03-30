@@ -127,7 +127,9 @@ async def request(interaction: discord.Interaction, video_url: str, start: int, 
             if str(interaction.user.id) in user_audio_files:
                 try:
                     os.remove(user_audio_files[str(interaction.user.id)])
-                except:
+                except FileNotFoundError:
+                    user_audio_files[str(interaction.user.id)] = None # Clear any saved filepath in dict if audio file not found
+                except Exception:
                     pass
 
             # Defer response to user to get 15 min window for follow up message
@@ -155,7 +157,12 @@ async def request(interaction: discord.Interaction, video_url: str, start: int, 
         else:
             # Check if user already has an audio file if so delete before downloading a new one
             if str(interaction.user.id) in user_audio_files:
-                os.remove(user_audio_files[str(interaction.user.id)])
+                try:
+                    os.remove(user_audio_files[str(interaction.user.id)])
+                except FileNotFoundError:
+                    user_audio_files[str(interaction.user.id)] = None # Clear any saved filepath in dict if audio file not found
+                except Exception:
+                    pass
 
             # Overwrite user error of timestamp total higher than 10 
             end = start+10
