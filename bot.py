@@ -2,15 +2,13 @@ import discord
 import asyncio
 from collections import deque
 from discord import app_commands
-import yt_dlp
-from yt_dlp.utils import download_range_func
 import shelve
+from py_functions.totalseconds import totalseconds
+from py_functions.download_audio import download_audio
 import os
-import subprocess
-import re
 
 # Add path for audio files to save at 
-path = "C:\\Users\\jadis\\OneDrive\\RhythmRover\\RhythmRover\\audio\\"
+path = "audio\\"
 
 # Add owner user id here to run owner specific commands
 owner = 426031900633858048
@@ -20,63 +18,6 @@ servers=[
     discord.Object(id=1203407209397231686), # Personal Server
     discord.Object(id=169178811429027840) # Og Crue Server
 ]
-# Function to find total seconds of a timestamp
-def totalseconds(time_str):
-    components = time_str.split(':') # Split by colon
-    if len(components) == 3:
-        # Format: HH:MM:SS
-        hours, minutes, seconds = map(int, components)
-        total_seconds = hours * 3600 + minutes * 60 + seconds
-    elif len(components) == 2:
-        # Format: MM:SS
-        minutes, seconds = map(int, components)
-        total_seconds = minutes * 60 + seconds
-    elif len(components) == 1:
-        # Format: SS
-        total_seconds = int(components[0])
-    else:
-        raise ValueError("Invalid timestamp format")
-    return total_seconds
-
-# Function to download audio from url using yt_dlp
-def download_audio(url, output_path, start, end):
-
-    # Get title of download 
-    with yt_dlp.YoutubeDL() as ydl:
-        info_dict = ydl.extract_info(url, download=False) # dont download url yet
-        base_title = info_dict['title'] # Extract title 
-        clean_title = re.sub(r'[^\w\s]', '', base_title) # Clean title of any special characters 
-        print(clean_title)
-        video_title = f'{clean_title}{str(start)}{str(end)}' # create unique title name
-        print(video_title)
-
-    # Setup options for ydl
-    ydl_opts = {
-        'extract_audio': True,
-        'format': 'bestaudio',
-        'outtmpl': f'{output_path}{video_title}.mp3', # Title audio file as per video title from url including timestamps
-        'download_ranges': download_range_func(None, [(start,end)]), # Specified timestamps in int format
-        'force_keyframes_at_cuts': True
-    }
-    try: # Try just audio
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
-            return video_title
-        
-    except: # fallback to video format
-        ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best'
-        ydl_opts['outtmpl'] = f'{output_path}{video_title}.mp4'
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
-
-            # Convert to audio
-            subprocess.run(["ffmpeg", "-i", f'{output_path}{video_title}.mp4', "-vn", "-acodec", "libmp3lame", "-y", f'{output_path}{video_title}.mp3'])
-
-            # Delete Video
-            os.remove(f'{output_path}{video_title}.mp4')
-
-            # Return audio title
-            return video_title
 
 # Initialize the bot with intents (required for certain events)
 intents = discord.Intents.default()
@@ -146,8 +87,7 @@ async def request(interaction: discord.Interaction, video_url: str, start: str, 
             if str(interaction.user.id) in user_audio_files:
                 try:
                     os.remove(user_audio_files[str(interaction.user.id)])
-                except FileNotFoundError:
-                    user_audio_files[str(interaction.user.id)] = None # Clear any saved filepath in dict if audio file not found
+                    user_audio_files[str(interaction.user.id)] = None # Clear any saved filepath in dict
                 except Exception:
                     pass
 
@@ -178,8 +118,7 @@ async def request(interaction: discord.Interaction, video_url: str, start: str, 
             if str(interaction.user.id) in user_audio_files:
                 try:
                     os.remove(user_audio_files[str(interaction.user.id)])
-                except FileNotFoundError:
-                    user_audio_files[str(interaction.user.id)] = None # Clear any saved filepath in dict if audio file not found
+                    user_audio_files[str(interaction.user.id)] = None # Clear any saved filepath in dict 
                 except Exception:
                     pass
 
