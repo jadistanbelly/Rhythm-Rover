@@ -1,23 +1,12 @@
-import discord
+'''Import required modules'''
 import asyncio
-from collections import deque
-from discord import app_commands
 import shelve
+import os
+import discord
+from discord import app_commands
 from py_functions.totalseconds import totalseconds
 from py_functions.download_audio import download_audio
-import os
-
-# Add path for audio files to save at 
-path = "audio\\"
-
-# Add owner user id here to run owner specific commands
-owner = 426031900633858048
-
-# Add server ids you would like to target OPTIONAL
-servers=[
-    discord.Object(id=1203407209397231686), # Personal Server
-    discord.Object(id=169178811429027840) # Og Crue Server
-]
+from variables import * # Change from variables to configs to run on your own bot
 
 # Initialize the bot with intents (required for certain events)
 intents = discord.Intents.default()
@@ -32,16 +21,15 @@ audio_db = shelve.open('audio_paths.db', writeback=True)
 # Can be altered via request command
 user_audio_files = audio_db.get('user_audio_paths', {})
 
-# Queue to manage audio playback order
-audio_queue = deque(maxlen=3)  # Set the queue limit to 3
-
 @client.event
 async def on_ready():
-    print(f"Logged in as {client.user.name} ({client.user.id})")
-    #await tree.sync(guild=discord.Object(id=169178811429027840)) # Run for auto sync everytime bot boots up
+    '''bot login welcome message'''
+    print("Logged in as:",
+          f"{client.user.name} ({client.user.id})")
 
 @client.event
 async def on_voice_state_update(member, before, after):
+    '''track if user joins voice channel'''
     if before.channel != after.channel:
         if after.channel:  # User joined a voice channel
             user_id = str(member.id)
@@ -56,26 +44,31 @@ async def on_voice_state_update(member, before, after):
                     await play_next_audio(after.channel)
 
 async def play_next_audio(channel):
+    '''play audio in queue'''
     while audio_queue:
         audio_file_path = audio_queue.popleft()
         vc = await channel.connect()
-        vc.play(discord.FFmpegPCMAudio(executable="C:\\ffmpeg\\tools\\ffmpeg\\bin\\ffmpeg.exe", source=audio_file_path))
-        print(f'Currently Playing: {audio_file_path}', f'Queue total: {len(audio_queue)+1}') # Show what is playing and queue length
+        vc.play(discord.FFmpegPCMAudio(executable=ffmpeg_path, source=audio_file_path))
+        print(f'Currently Playing: {audio_file_path}',
+              f'Queue total: {len(audio_queue)}') # Show what is playing and queue length
         while vc.is_playing():
             await asyncio.sleep(1)
         await vc.disconnect()
 
-# Define the download command 
+# Define the download command
 @tree.command(
     name="request",
     description="Tell me what intro song you would like",
     #guilds=servers
 )
 # Provide instructions to user
-@app_commands.describe(video_url = "Type your url", start = "Where do you want to start the download?", end = "Where do you want to end the download?")
+@app_commands.describe(video_url = "Type your url",
+                       start = "Where do you want to start the download?",
+                       end = "Where do you want to end the download?")
 
 # Create request function
 async def request(interaction: discord.Interaction, video_url: str, start: str, end: str):
+    ''' request function for users to change intro audio'''
     # Convert and overwrite timestamps to only seconds
     start = totalseconds(start)
     end = totalseconds(end)
@@ -94,17 +87,17 @@ async def request(interaction: discord.Interaction, video_url: str, start: str, 
             # Defer response to user to get 15 min window for follow up message
             await interaction.response.defer(ephemeral = True)
 
-            # Download the video 
-            audio_title = download_audio(video_url, path, start, end)
+            # Download the video
+            audio_title = download_audio(video_url, Path, start, end)
 
             # Insert User ID and path of downloaded audio file
-            user_audio_files[str(interaction.user.id)] = f'{path}{audio_title}.mp3'
+            user_audio_files[str(interaction.user.id)] = f'{Path}{audio_title}.mp3'
 
-            # Update Shelf DB 
+            # Update Shelf DB
             audio_db['user_audio_paths'] = user_audio_files
 
             # Save changes immediately
-            audio_db.sync() 
+            audio_db.sync()
 
             # Sleep for 3 seconds to ensure initial response window passes
             await asyncio.sleep(3) # Can probably be shortened some more
@@ -118,23 +111,23 @@ async def request(interaction: discord.Interaction, video_url: str, start: str, 
             if str(interaction.user.id) in user_audio_files:
                 try:
                     os.remove(user_audio_files[str(interaction.user.id)])
-                    user_audio_files[str(interaction.user.id)] = None # Clear any saved filepath in dict 
+                    user_audio_files[str(interaction.user.id)] = None # Clear any saved filepath in dict
                 except Exception:
                     pass
 
-            # Overwrite user error of timestamp total higher than 10 
+            # Overwrite user error of timestamp total higher than 10
             end = start+10
 
             # Defer response to user to get 15 min window for follow up message
             await interaction.response.defer(ephemeral = True)
 
-            # Download the video 
-            audio_title = download_audio(video_url, path, start, end)
+            # Download the video
+            audio_title = download_audio(video_url, Path, start, end)
 
             # Insert User ID and path of downloaded audio file
-            user_audio_files[str(interaction.user.id)] = f'{path}{audio_title}.mp3'
+            user_audio_files[str(interaction.user.id)] = f'{Path}{audio_title}.mp3'
 
-            # Update Shelf DB 
+            # Update Shelf DB
             audio_db['user_audio_paths'] = user_audio_files
 
             # Save changes immediately
@@ -147,42 +140,46 @@ async def request(interaction: discord.Interaction, video_url: str, start: str, 
             await interaction.edit_original_response(content="Your intro has been added")
 
     except asyncio.TimeoutError:
-        await interaction.response.send_message("You took too long to respond. Please try again.", ephemeral = True)
+        await interaction.response.send_message("You took too long to respond. Please try again.",
+                                                ephemeral = True)
 
 
-# Define the sync command 
+# Define the sync command
 @tree.command(
     name="sync",
     description="Owner only",
     #guilds=servers
 )
 
-# Owner only command to sync command trees in all servers that bot is deployed in
 async def sync(interaction):
-    if interaction.user.id == owner: 
+    '''Owner only command to sync command trees in all servers that bot is deployed in'''
+    if interaction.user.id == Owner:
         await tree.sync()
-        await interaction.response.send_message('Command tree synced.', ephemeral = True)
+        await interaction.response.send_message('Command tree synced.',
+                                                ephemeral = True)
     else:
-        await interaction.response.send_message('You must be the owner to use this command!', ephemeral = True)
-        
-# Define the kill command 
+        await interaction.response.send_message('You must be the owner to use this command!',
+                                                ephemeral = True)
+# Define the kill command
 @tree.command(
     name="kill",
     description="Clear Queue",
     #guilds=servers
 )
 
-# Owner only command to clear queue and prevent spamming
 async def kill(interaction):
-    if interaction.user.id == owner: 
+    '''Owner only command to clear queue and prevent spamming'''
+    if interaction.user.id == Owner:
         try:
             audio_queue.clear() # Clear queue
-            await interaction.response.send_message('Queue Cleared', ephemeral = True)
+            await interaction.response.send_message('Queue Cleared',
+                                                    ephemeral = True)
         except Exception as e:
-            await interaction.response.send_message(f'Clearing failed. Error: {e}', ephemeral = True)
+            await interaction.response.send_message(f'Clearing failed. Error: {e}',
+                                                    ephemeral = True)
     else:
-        await interaction.response.send_message('You must be the owner to use this command!', ephemeral = True)
+        await interaction.response.send_message('You must be the owner to use this command!',
+                                                ephemeral = True)
 
 # Run the bot
-client.run("MTIyMTUzMDcyMTQ5MjAwOTA2MQ.GHwATW.4LerKAQ041vJ6XxDpzMFBrwrPgtVm86Sao-RN4")
-
+client.run(client_token)

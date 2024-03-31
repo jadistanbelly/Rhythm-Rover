@@ -3,3 +3,7 @@ audio_paths.db.dir
 audio_paths.db.dat
 audio_paths.db.bak
 audio
+__pycache__
+.vscode
+.pylintrc
+variables.py
