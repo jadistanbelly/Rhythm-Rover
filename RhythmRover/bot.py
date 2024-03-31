@@ -20,6 +20,23 @@ servers=[
     discord.Object(id=1203407209397231686), # Personal Server
     discord.Object(id=169178811429027840) # Og Crue Server
 ]
+# Function to find total seconds of a timestamp
+def totalseconds(time_str):
+    components = time_str.split(':') # Split by colon
+    if len(components) == 3:
+        # Format: HH:MM:SS
+        hours, minutes, seconds = map(int, components)
+        total_seconds = hours * 3600 + minutes * 60 + seconds
+    elif len(components) == 2:
+        # Format: MM:SS
+        minutes, seconds = map(int, components)
+        total_seconds = minutes * 60 + seconds
+    elif len(components) == 1:
+        # Format: SS
+        total_seconds = int(components[0])
+    else:
+        raise ValueError("Invalid timestamp format")
+    return total_seconds
 
 # Function to download audio from url using yt_dlp
 def download_audio(url, output_path, start, end):
@@ -38,7 +55,7 @@ def download_audio(url, output_path, start, end):
         'extract_audio': True,
         'format': 'bestaudio',
         'outtmpl': f'{output_path}{video_title}.mp3', # Title audio file as per video title from url including timestamps
-        'download_ranges': download_range_func(None, [(start, end)]), # Specified timestamps in int format
+        'download_ranges': download_range_func(None, [(start,end)]), # Specified timestamps in int format
         'force_keyframes_at_cuts': True
     }
     try: # Try just audio
@@ -117,8 +134,10 @@ async def play_next_audio(channel):
 @app_commands.describe(video_url = "Type your url", start = "Where do you want to start the download?", end = "Where do you want to end the download?")
 
 # Create request function
-async def request(interaction: discord.Interaction, video_url: str, start: int, end: int):
-
+async def request(interaction: discord.Interaction, video_url: str, start: str, end: str):
+    # Convert and overwrite timestamps to only seconds
+    start = totalseconds(start)
+    end = totalseconds(end)
     try:
         # Check if timestamp is 10 sec or less
         if end-start <= 10:
