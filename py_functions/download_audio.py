@@ -7,6 +7,11 @@ import os
 # Function to download audio from url using yt_dlp
 def download_audio(url, output_path, start, end):
 
+    # Split video link from playlist
+    if "&list=" in url:
+        split = url.split("&list=")
+        url = split[0]
+
     # Get title of download 
     with yt_dlp.YoutubeDL() as ydl:
         info_dict = ydl.extract_info(url, download=False) # dont download url yet
@@ -22,7 +27,8 @@ def download_audio(url, output_path, start, end):
         'format': 'bestaudio',
         'outtmpl': f'{output_path}{video_title}.mp3', # Title audio file as per video title from url including timestamps
         'download_ranges': download_range_func(None, [(start,end)]), # Specified timestamps in int format
-        'force_keyframes_at_cuts': True
+        'force_keyframes_at_cuts': True,
+        #'noplaylist': True # Code not working
     }
     try: # Try just audio
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

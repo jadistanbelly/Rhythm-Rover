@@ -1,6 +1,5 @@
 '''Import required modules'''
 import asyncio
-import shelve
 import os
 import discord
 from discord import app_commands
@@ -8,22 +7,8 @@ from py_functions.totalseconds import totalseconds
 from py_functions.download_audio import download_audio
 from variables import * # Change from variables to configs to run on your own bot
 
-# Initialize the bot with intents (required for certain events)
-intents = discord.Intents.default()
-intents.voice_states = True  # Enable voice state events
-client = discord.Client(intents=intents)
-tree = app_commands.CommandTree(client)
-
-# Initialize the shelve database
-audio_db = shelve.open('audio_paths.db', writeback=True)
-
-# Load existing data (if any) from dict that maps user IDs to audio file paths
-# Can be altered via request command
-user_audio_files = audio_db.get('user_audio_paths', {})
-
 @client.event
 async def on_ready():
-    '''bot login welcome message'''
     print("Logged in as:",
           f"{client.user.name} ({client.user.id})")
 
@@ -87,8 +72,11 @@ async def request(interaction: discord.Interaction, video_url: str, start: str, 
             # Defer response to user to get 15 min window for follow up message
             await interaction.response.defer(ephemeral = True)
 
-            # Download the video
-            audio_title = download_audio(video_url, Path, start, end)
+            try:
+                # Download the video
+                audio_title = download_audio(video_url, Path, start, end)
+            except Exception as e:
+                await interaction.edit_original_response(content= e)
 
             # Insert User ID and path of downloaded audio file
             user_audio_files[str(interaction.user.id)] = f'{Path}{audio_title}.mp3'
@@ -121,8 +109,11 @@ async def request(interaction: discord.Interaction, video_url: str, start: str, 
             # Defer response to user to get 15 min window for follow up message
             await interaction.response.defer(ephemeral = True)
 
-            # Download the video
-            audio_title = download_audio(video_url, Path, start, end)
+            try:
+                # Download the video
+                audio_title = download_audio(video_url, Path, start, end)
+            except Exception as e:
+                await interaction.edit_original_response(content= e)
 
             # Insert User ID and path of downloaded audio file
             user_audio_files[str(interaction.user.id)] = f'{Path}{audio_title}.mp3'
