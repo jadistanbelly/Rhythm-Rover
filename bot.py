@@ -37,6 +37,7 @@ async def play_next_audio(channel):
     while audio_queue:
         audio_file_path = audio_queue.popleft()
         vc = await channel.connect()
+        await asyncio.sleep(0.5) # Wait 0.5 second before playing for bot to join channel
         vc.play(discord.FFmpegPCMAudio(executable=ffmpeg_path, source=audio_file_path))
         print(f'Currently Playing: {audio_file_path}',
               f'Queue total: {len(audio_queue)}') # Show what is playing and queue length
