@@ -3,7 +3,8 @@ from collections import deque
 import shelve
 from discord import app_commands
 import discord
-
+import os
+from dotenv import load_dotenv
 # Add path for audio files to save at
 Path = "audio\\" # Add \\ at the end of your path
 
@@ -25,6 +26,9 @@ ffmpeg_path = "C:\\ffmpeg\\tools\\ffmpeg\\bin\\ffmpeg.exe"
 
 # Input your token to run bot
 client_token = "input token here"
+'''Or if using venv'''
+#load_dotenv()
+#client_token = os.getenv("TOKEN")
 
 '''Discord variables'''
 # Initialize the bot with intents (required for certain events)
