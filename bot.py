@@ -7,12 +7,16 @@ from py_functions.totalseconds import totalseconds
 from py_functions.download_audio import download_audio
 from variables import * # Change from variables to configs to run on your own bot
 
-@client.event
+@bot.event
 async def on_ready():
     print("Logged in as:",
-          f"{client.user.name} ({client.user.id})")
+          f"{bot.user.name} ({bot.user.id})")
 
-@client.event
+#async def confirmlogin():
+#    print('this function is called')
+#    await bot.load_extension('disc_functions.on_ready')
+
+@bot.event
 async def on_voice_state_update(member, before, after):
     '''track if user joins voice channel'''
     if before.channel != after.channel:
@@ -25,7 +29,7 @@ async def on_voice_state_update(member, before, after):
                 audio_queue.append(audio_file_path)  # Add to the queue
 
                 # If the queue is not empty and the bot is not currently playing
-                if audio_queue and not client.voice_clients:
+                if audio_queue and not bot.voice_clients:
                     await play_next_audio(after.channel)
 
 async def play_next_audio(channel):
@@ -173,4 +177,4 @@ async def kill(interaction):
                                                 ephemeral = True)
 
 # Run the bot
-client.run(client_token)
+bot.run(bot_token)
