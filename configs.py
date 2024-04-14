@@ -1,12 +1,15 @@
 '''Edit variables here to change bot.py settings'''
 from collections import deque
 import shelve
-from discord import app_commands
+from discord.ext import commands
 import discord
 import os
 from dotenv import load_dotenv
 # Add path for audio files to save at
 Path = "audio\\" # Add \\ at the end of your path
+
+# Decide how many seconds needed to trigger outro
+outro_trigger = 11 # Set to 11 seconds for testing purposes. Change to desired value in seconds.
 
 # Add owner user id here to run owner specific commands
 Owner = "add user id here in integer format"
@@ -25,17 +28,16 @@ user_audio_files = audio_db.get('user_audio_paths', {})
 ffmpeg_path = "C:\\ffmpeg\\tools\\ffmpeg\\bin\\ffmpeg.exe"
 
 # Input your token to run bot
-client_token = "input token here"
+bot_token = "input token here"
 '''Or if using venv'''
 #load_dotenv()
-#client_token = os.getenv("TOKEN")
+#bot_token = os.getenv("TOKEN")
 
 '''Discord variables'''
-# Initialize the bot with intents (required for certain events)
-intents = discord.Intents.default()
-intents.voice_states = True  # Enable voice state events
-client = discord.Client(intents=intents)
-tree = app_commands.CommandTree(client)
+# Intitialize bot and tree
+bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), 
+                   intents=discord.Intents.all())  # commands.when_mentioned_or("!") is used to make the bot respond to !ping and @bot ping
+tree= bot.tree
 
 # Add server ids you would like to target for your commands 
 '''OPTIONAL'''
