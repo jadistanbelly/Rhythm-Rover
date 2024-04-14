@@ -1,6 +1,7 @@
 '''Import required modules'''
 import discord
 from disc_functions.intro_command import intro
+from disc_functions.outro_command import outro
 from disc_functions.sync_command import sync
 from disc_functions.kill_command import kill
 from disc_functions.voice_events import on_voice_state_update, play_next_audio
@@ -15,6 +16,10 @@ async def on_ready():
 # Call intro function to bot.py
 async def call_intro(interaction: discord.Interaction, video_url: str, start: str, end: str):
     await intro(interaction, video_url, start, end)
+
+# Call outro function to bot.py
+async def call_outro(interaction: discord.Interaction, video_url: str, start: str, end: str):
+    await outro(interaction, video_url, start, end)
 
 # Call sync function to bot.py
 async def call_sync(interaction):
