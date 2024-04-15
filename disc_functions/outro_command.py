@@ -23,6 +23,9 @@ async def outro(interaction: discord.Interaction, video_url: str, start: str, en
     # Convert and overwrite timestamps to only seconds
     start = totalseconds(start)
     end = totalseconds(end)
+    # If user not in keys then add them
+    if str(interaction.user.id) not in user_audio_files:
+        user_audio_files[str(interaction.user.id)] = []
     try:
         # Check if timestamp is 10 sec or less
         if end-start <= 10:
