@@ -23,6 +23,9 @@ async def intro(interaction: discord.Interaction, video_url: str, start: str, en
     # Convert and overwrite timestamps to only seconds
     start = totalseconds(start)
     end = totalseconds(end)
+    # If user not in keys then add them
+    if str(interaction.user.id) not in user_audio_files:
+        user_audio_files[str(interaction.user.id)] = []
     try:
         # Check if timestamp is 10 sec or less
         if end-start <= 10:
@@ -31,7 +34,6 @@ async def intro(interaction: discord.Interaction, video_url: str, start: str, en
             if str(interaction.user.id) in user_audio_files:
                 try:
                     os.remove(user_audio_files[str(interaction.user.id)][0])
-                    user_audio_files[str(interaction.user.id)][0] = None # Clear any saved filepath in dict
                 except Exception:
                     pass
 
@@ -44,8 +46,11 @@ async def intro(interaction: discord.Interaction, video_url: str, start: str, en
             except Exception as e:
                 await interaction.edit_original_response(content= e)
 
-            # Insert User ID and path of downloaded audio file
-            user_audio_files[str(interaction.user.id)][0] = f'{Path}{audio_title}.mp3'
+            # Insert User ID and path of intro
+            if len(user_audio_files[str(interaction.user.id)]) < 2: # Check if user alread has an outro
+                user_audio_files[str(interaction.user.id)].append(f'{Path}{audio_title}.mp3') # if not append
+            else:
+                user_audio_files[str(interaction.user.id)][0] = f'{Path}{audio_title}.mp3' # if so overwrite
 
             # Update Shelf DB
             audio_db['user_audio_paths'] = user_audio_files
@@ -81,8 +86,11 @@ async def intro(interaction: discord.Interaction, video_url: str, start: str, en
             except Exception as e:
                 await interaction.edit_original_response(content= e)
 
-            # Insert User ID and path of downloaded audio file
-            user_audio_files[str(interaction.user.id)][0] = f'{Path}{audio_title}.mp3'
+            # Insert User ID and path of outro
+            if len(user_audio_files[str(interaction.user.id)]) < 2: # Check if user alread has an outro
+                user_audio_files[str(interaction.user.id)].append(f'{Path}{audio_title}.mp3') # if not append
+            else:
+                user_audio_files[str(interaction.user.id)][0] = f'{Path}{audio_title}.mp3' # if so overwrite
 
             # Update Shelf DB
             audio_db['user_audio_paths'] = user_audio_files
