@@ -34,7 +34,8 @@ async def on_voice_state_update(member, before, after):
                     try: 
                         audio_file_path = user_audio_files[user_id][1] # Get outro path
                         audio_queue.append(audio_file_path)  # Add to the queue
-                        await play_next_audio(before.channel) # Play outro
+                        if not bot.voice_clients:
+                            await play_next_audio(before.channel) # Play outro
                     except IndexError:
                         print("Outro not setup for user")
 
@@ -45,7 +46,10 @@ async def play_next_audio(channel):
     '''play audio in queue'''
     while audio_queue:
         audio_file_path = audio_queue.popleft()
-        vc = await channel.connect()
+        try:
+            vc = await channel.connect()
+        except discord.ClientException:
+            vc = channel.guild.voice_client
         await asyncio.sleep(0.5) # Wait 0.5 second before playing for bot to join channel
         vc.play(discord.FFmpegPCMAudio(executable=ffmpeg_path, source=audio_file_path))
         print(f'Currently Playing: {audio_file_path}',
