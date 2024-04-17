@@ -3,8 +3,9 @@ from discord import app_commands
 import os
 from py_functions.download_audio import download_audio
 from py_functions.totalseconds import totalseconds
+from py_functions.sync_db import sync_db
 import asyncio
-from variables import Path, user_audio_files, audio_db, tree # Change from variables to configs to run on your own bot
+from variables import Path, user_audio_files, tree # Change from variables to configs to run on your own bot
 
 # Define the download command
 @tree.command(
@@ -25,7 +26,7 @@ async def outro(interaction: discord.Interaction, video_url: str, start: str, en
     end = totalseconds(end)
     # If user not in keys then add them
     if str(interaction.user.id) not in user_audio_files:
-        user_audio_files[str(interaction.user.id)] = []
+        user_audio_files[str(interaction.user.id)] = [None, None]
     try:
         # Check if timestamp is 10 sec or less
         if end-start <= 10:
@@ -53,12 +54,9 @@ async def outro(interaction: discord.Interaction, video_url: str, start: str, en
             else:
                 user_audio_files[str(interaction.user.id)][1] = f'{Path}{audio_title}.mp3' # if so overwrite
 
-            # Update Shelf DB
-            audio_db['user_audio_paths'] = user_audio_files
-
-            # Save changes immediately
-            audio_db.sync()
-
+            # Sync DB
+            sync_db()
+            
             # Sleep for 3 seconds to ensure initial response window passes
             await asyncio.sleep(3) # Can probably be shortened some more
 
@@ -93,11 +91,8 @@ async def outro(interaction: discord.Interaction, video_url: str, start: str, en
             else:
                 user_audio_files[str(interaction.user.id)][1] = f'{Path}{audio_title}.mp3' # if so overwrite
 
-            # Update Shelf DB
-            audio_db['user_audio_paths'] = user_audio_files
-
-            # Save changes immediately
-            audio_db.sync()
+            # Sync DB
+            sync_db()
 
             # Sleep for 3 seconds to ensure initial response window passes
             await asyncio.sleep(3) # Can probably be shortened some more
