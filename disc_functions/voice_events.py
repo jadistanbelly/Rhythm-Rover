@@ -21,7 +21,12 @@ async def on_voice_state_update(member, before, after):
                 #print(f'Audio Queue: {audio_queue}')
                 # If the queue is not empty and the bot is not currently playing
                 if audio_queue and not bot.voice_clients:
-                    await play_next_audio(after.channel)
+                    try:
+                        if len(audio_queue) > 0:
+                            await play_next_audio(after.channel)
+                    except TypeError:
+                        voice_client = discord.utils.get(bot.voice_clients, guild=after.channel.guild)
+                        await voice_client.disconnect()
 
             '''play audio when user leaves voice channel'''
         else: # User left a voice channel
@@ -35,7 +40,11 @@ async def on_voice_state_update(member, before, after):
                         audio_file_path = user_audio_files[user_id][1] # Get outro path
                         audio_queue.append(audio_file_path)  # Add to the queue
                         if not bot.voice_clients:
-                            await play_next_audio(before.channel) # Play outro
+                            try:
+                                await play_next_audio(before.channel) # Play outro
+                            except TypeError:
+                                voice_client = discord.utils.get(bot.voice_clients, guild=before.channel.guild)
+                                await voice_client.disconnect()
                     except IndexError:
                         print("Outro not setup for user")
 
