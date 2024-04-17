@@ -5,6 +5,7 @@ from disc_functions.outro_command import outro
 from disc_functions.sync_command import sync
 from disc_functions.kill_command import kill
 from disc_functions.voice_events import on_voice_state_update, play_next_audio
+from disc_functions.delete_command import delete
 from variables import bot, bot_token # Change from variables to configs to run on your own bot
 
 # Identify bot login information
@@ -28,6 +29,10 @@ async def call_sync(interaction):
 # Call kill function to bot.py
 async def call_kill(interaction):
     await kill(interaction)
+
+# Call delete function to bot.py
+async def call_delete(interaction: discord.Interaction, choice: str):
+    await delete(interaction, choice)
 
 # Call on_voice_state_update function to bot.py
 async def call_on_voice_state_update(member, before, after):
