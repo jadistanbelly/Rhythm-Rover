@@ -9,3 +9,4 @@ __pycache__
 variables.py
 venv
 .env
+py_functions\__pycache__
