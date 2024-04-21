@@ -1,5 +1,6 @@
-from variables import tree, Owner # Change from variables to configs to run on your own bot
+from variables import tree, bot # Change from variables to configs to run on your own bot
 from disc_functions.voice_events import audio_queue
+import discord
 
 # Define the kill command
 @tree.command(
@@ -9,15 +10,14 @@ from disc_functions.voice_events import audio_queue
 )
 
 async def kill(interaction):
-    '''Owner only command to clear queue and prevent spamming'''
-    if interaction.user.id == Owner:
-        try:
-            audio_queue.clear() # Clear queue
-            await interaction.response.send_message('Queue Cleared',
-                                                    ephemeral = True)
-        except Exception as e:
-            await interaction.response.send_message(f'Clearing failed. Error: {e}',
-                                                    ephemeral = True)
-    else:
-        await interaction.response.send_message('You must be the owner to use this command!',
+    '''Command to clear queue and prevent spamming'''
+    try:
+        audio_queue.clear() # Clear queue
+        voice_client = discord.utils.get(bot.voice_clients, guild=interaction.channel.guild) # Find where the bot is
+        if voice_client.is_playing(): # Check if bot is playing
+            voice_client.stop() # Stop the bot
+        await interaction.response.send_message('Queue Cleared',
+                                                ephemeral = True)
+    except Exception as e:
+        await interaction.response.send_message(f'Clearing failed. Error: {e}',
                                                 ephemeral = True)
