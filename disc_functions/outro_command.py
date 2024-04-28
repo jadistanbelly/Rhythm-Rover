@@ -4,102 +4,48 @@ import os
 from py_functions.download_audio import download_audio
 from py_functions.totalseconds import totalseconds
 from py_functions.sync_db import sync_db
-import asyncio
 from variables import Path, user_audio_files, tree # Change from variables to configs to run on your own bot
 
-# Define the download command
+async def download_and_store_audio(video_url: str, start: int, end: int, user_id: str):
+    '''download users outro audio and store in user_audio_files dictionary'''
+    try:
+        if end - start > 10: # If audio is longer than 10 seconds
+            end = start + 10 # Set end to 10 seconds
+
+        audio_title = download_audio(video_url, Path, start, end) # Download audio
+        audio_path = f'{Path}{audio_title}.mp3' # Create audio path
+
+        if user_id in user_audio_files: # Check if user exists
+            if user_audio_files[user_id][1]: # Check if user already has outro
+                os.remove(user_audio_files[user_id][1]) # Delete old outro
+            user_audio_files[user_id][1] = audio_path # Store new outro
+
+        sync_db() # Update database
+
+        return audio_path # Return new audio path
+    except Exception as e:
+        return str(e)
+
 @tree.command(
     name="outro",
     description="Tell me what outro song you would like",
     #guilds=servers
 )
-# Provide instructions to user
-@app_commands.describe(video_url = "Type your url",
-                       start = "Where do you want to start the download?",
-                       end = "Where do you want to end the download?")
-
-# Create outro function
+@app_commands.describe(video_url="Type your url", start="Where do you want to start the download?", end="Where do you want to end the download?")
 async def outro(interaction: discord.Interaction, video_url: str, start: str, end: str):
-    ''' outro function for users to change outro audio'''
-    # Convert and overwrite timestamps to only seconds
-    start = totalseconds(start)
-    end = totalseconds(end)
-    # If user not in keys then add them
-    if str(interaction.user.id) not in user_audio_files:
-        user_audio_files[str(interaction.user.id)] = [None, None]
-    try:
-        # Check if timestamp is 10 sec or less
-        if end-start <= 10:
+    ''' outro function for users to change outro audio triggered by the /outro command'''
+    start = totalseconds(start) # Convert timestamps to only seconds
+    end = totalseconds(end) # Convert timestamps to only seconds
+    user_id = str(interaction.user.id) # Get user ID
 
-            # Check if user already has an audio file if so delete before downloading a new one
-            if str(interaction.user.id) in user_audio_files:
-                try:
-                    os.remove(user_audio_files[str(interaction.user.id)][1])
-                    user_audio_files[str(interaction.user.id)][1] = None # Clear any saved filepath in dict
-                except Exception:
-                    pass
+    if user_id not in user_audio_files: # If user not in keys then add them
+        user_audio_files[user_id] = [None, None] 
 
-            # Defer response to user to get 15 min window for follow up message
-            await interaction.response.defer(ephemeral = True)
+    await interaction.response.defer(ephemeral=True) # Defer response
 
-            try:
-                # Download the video
-                audio_title = download_audio(video_url, Path, start, end)
-            except Exception as e:
-                await interaction.edit_original_response(content= e)
+    audio_path = await download_and_store_audio(video_url, start, end, user_id) # Download and store audio path
 
-            # Insert User ID and path of outro
-            if len(user_audio_files[str(interaction.user.id)]) < 2: # Check if user alread has an outro
-                user_audio_files[str(interaction.user.id)].append(f'{Path}{audio_title}.mp3') # if not append
-            else:
-                user_audio_files[str(interaction.user.id)][1] = f'{Path}{audio_title}.mp3' # if so overwrite
-
-            # Sync DB
-            sync_db()
-            
-            # Sleep for 3 seconds to ensure initial response window passes
-            await asyncio.sleep(3) # Can probably be shortened some more
-
-            # Respond back to user
-            await interaction.edit_original_response(content="Your outro has been added")
-
-
-        else:
-            # Check if user already has an audio file if so delete before downloading a new one
-            if str(interaction.user.id) in user_audio_files:
-                try:
-                    os.remove(user_audio_files[str(interaction.user.id)][1])
-                    user_audio_files[str(interaction.user.id)][1] = None # Clear any saved filepath in dict
-                except Exception:
-                    pass
-
-            # Overwrite user error of timestamp total higher than 10
-            end = start+10
-
-            # Defer response to user to get 15 min window for follow up message
-            await interaction.response.defer(ephemeral = True)
-
-            try:
-                # Download the video
-                audio_title = download_audio(video_url, Path, start, end)
-            except Exception as e:
-                await interaction.edit_original_response(content= e)
-
-            # Insert User ID and path of outro
-            if len(user_audio_files[str(interaction.user.id)]) < 2: # Check if user alread has an outro
-                user_audio_files[str(interaction.user.id)].append(f'{Path}{audio_title}.mp3') # if not append
-            else:
-                user_audio_files[str(interaction.user.id)][1] = f'{Path}{audio_title}.mp3' # if so overwrite
-
-            # Sync DB
-            sync_db()
-
-            # Sleep for 3 seconds to ensure initial response window passes
-            await asyncio.sleep(3) # Can probably be shortened some more
-
-            # Respond back to user
-            await interaction.edit_original_response(content="Your outro has been added")
-
-    except asyncio.TimeoutError:
-        await interaction.response.send_message("You took too long to respond. Please try again.",
-                                                ephemeral = True)
+    if os.path.exists(audio_path): # Check if audio path leads to a file
+        await interaction.edit_original_response(content="Your outro has been added")
+    else:
+        await interaction.edit_original_response(content=f"Error:{audio_path}")
