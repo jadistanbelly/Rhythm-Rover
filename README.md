@@ -18,7 +18,7 @@ Intro Example            |  Outro Example
 1. **Setup:**
    - Clone the repository.
    - Install the required dependencies using the given requirements.txt file.
-   - Get the bot token and setup intents on Developer Portal.
+   - Get the bot token and setup [intents](https://github.com/jadistanbelly/Rhythm-Rover?tab=readme-ov-file#oauth2) on Developer Portal.
    - Configure the bot token and other settings in `configs.py`.
 
 2. **Running the Bot:**
