@@ -18,6 +18,7 @@ Intro Example            |  Outro Example
 1. **Setup:**
    - Clone the repository.
    - Install the required dependencies using the given requirements.txt file.
+   - Get the bot token and setup intents on Developer Portal.
    - Configure the bot token and other settings in `configs.py`.
 
 2. **Running the Bot:**
@@ -39,6 +40,28 @@ Intro Example            |  Outro Example
    - `/delete`: Delete all saved audio clips for the user.
    - `/kill`: Clear bots audio queue to prevent spamming (owner only).
    - `!sync`: sync changes to tree commands (owner only).
+
+## OAuth2
+
+| Permissions                  | Privileged Gateway Intents | Scopes                 |
+|------------------------------|----------------------------|------------------------|
+| Create Events                | Presence Intent            | applications.commands  |
+| Create Expressions           | Message Content Intent     | bot                    |
+| Read Messages/View Channels  | Server Members Intent      |                        |
+| Mention @everyone, @here, and All Roles |                            |                        |
+| Use Application Commands     |                            |                        |
+| Send Messages                |                            |                        |
+| Connect                      |                            |                        |
+| Speak                        |                            |                        |
+| Use Voice Activity           |                            |                        |
+
+**Note:**
+
+All these permissions are likely not required I initially was testing various features and used these intents.
+
+Here is the authorization link used:
+
+[https://discord.com/oauth2/authorize?client_id=(**INPUT_YOUR_CLIENT_ID_HERE**)&permissions=**26390463384576**&scope=**applications.commands+bot**](https://discord.com/oauth2/authorize?client_id=(INPUT_YOUR_CLIENT_ID_HERE)&permissions=26390463384576**&scope=applications.commands+bot)
 
 ## Contributing
 
