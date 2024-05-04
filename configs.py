@@ -45,3 +45,5 @@ tree= bot.tree
 #    discord.Object(id="server id in integer format"), # Personal Server
 #    discord.Object(id="server id in integer format") # Friends Server
 #]
+
+#server = discord.Object(id="server id in integer format")

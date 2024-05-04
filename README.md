@@ -20,7 +20,10 @@ Intro Example            |  Outro Example
    - Install the required dependencies using the given requirements.txt file.
    - Configure the bot token and other settings in `configs.py`.
 
-2. **Commands:**
+2. **Running the Bot:**
+   - Start the bot using `python bot.py`.
+
+3. **Commands:**
    - `/intro`: Register an intro audio clip.
         - video_url = paste the link you would like to download
         - start = give the start time for the clip.
@@ -36,9 +39,6 @@ Intro Example            |  Outro Example
    - `/delete`: Delete all saved audio clips for the user.
    - `/kill`: Clear bots audio queue to prevent spamming (owner only).
    - `/sync` or `!sync`: sync changes to commands (owner only).
-
-3. **Running the Bot:**
-   - Start the bot using `python bot.py`.
 
 ## Contributing
 
