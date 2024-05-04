@@ -23,8 +23,8 @@ async def call_outro(interaction: discord.Interaction, video_url: str, start: st
     await outro(interaction, video_url, start, end)
 
 # Call sync function to bot.py
-async def call_sync(interaction):
-    await sync(interaction)
+async def call_sync(ctx):
+    await sync(ctx)
 
 # Call kill function to bot.py
 async def call_kill(interaction):

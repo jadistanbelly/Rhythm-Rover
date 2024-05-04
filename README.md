@@ -38,7 +38,7 @@ Intro Example            |  Outro Example
             - This can be in any format (SS) or (HH:MM:SS)
    - `/delete`: Delete all saved audio clips for the user.
    - `/kill`: Clear bots audio queue to prevent spamming (owner only).
-   - `/sync` or `!sync`: sync changes to commands (owner only).
+   - `!sync`: sync changes to tree commands (owner only).
 
 ## Contributing
 
