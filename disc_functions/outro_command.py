@@ -1,3 +1,5 @@
+import asyncio
+import concurrent.futures
 import discord
 from discord import app_commands
 import os
@@ -8,11 +10,13 @@ from variables import Path, user_audio_files, tree # Change from variables to co
 
 async def download_and_store_audio(video_url: str, start: int, end: int, user_id: str):
     '''download users outro audio and store in user_audio_files dictionary'''
+    loop = asyncio.get_running_loop()
     try:
         if end - start > 10: # If audio is longer than 10 seconds
             end = start + 10 # Set end to 10 seconds
 
-        audio_title = download_audio(video_url, Path, start, end) # Download audio
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            audio_title = await loop.run_in_executor(pool, download_audio, video_url, Path, start, end) # Download audio
         audio_path = f'{Path}{audio_title}.mp3' # Create audio path
 
         if user_id in user_audio_files: # Check if user exists
