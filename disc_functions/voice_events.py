@@ -5,8 +5,8 @@ from datetime import datetime
 
 # Store user join times to determine when to play outro
 user_join_times = {}
-@bot.event
-async def on_voice_state_update(member, before, after):
+
+async def handle_voice_state_update(member, before, after):
     '''track if user joins voice channel'''
     user_id = str(member.id)
     try:
