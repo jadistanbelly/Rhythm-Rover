@@ -1,6 +1,6 @@
 import discord
 import asyncio
-from variables import audio_queue, ffmpeg_path, bot, user_audio_files, outro_trigger # Change from variables to configs to run on your own bot
+from variables import audio_queue, ffmpeg_path, bot, user_audio_files, outro_trigger
 from datetime import datetime
 
 # Store user join times to determine when to play outro

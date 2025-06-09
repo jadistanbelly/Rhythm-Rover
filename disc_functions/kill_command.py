@@ -1,4 +1,4 @@
-from variables import tree, bot # Change from variables to configs to run on your own bot
+from variables import tree, bot 
 from disc_functions.voice_events import audio_queue
 import discord
 

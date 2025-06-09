@@ -6,7 +6,6 @@ audio
 __pycache__
 .vscode
 .pylintrc
-variables.py
 venv
 .env
 py_functions\__pycache__
