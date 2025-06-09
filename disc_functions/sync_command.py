@@ -1,4 +1,4 @@
-from variables import bot # Change from variables to configs to run on your own bot
+from variables import bot 
 from discord.ext import commands
 
 # Define the sync command        

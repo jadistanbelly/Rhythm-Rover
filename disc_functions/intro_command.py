@@ -6,7 +6,7 @@ import os
 from py_functions.download_audio import download_audio
 from py_functions.totalseconds import totalseconds
 from py_functions.sync_db import sync_db
-from variables import Path, user_audio_files, tree # Change from variables to configs to run on your own bot
+from variables import Path, user_audio_files, tree 
 
 async def download_and_store_audio(video_url: str, start: int, end: int, user_id: str):
     '''download users intro audio and store in user_audio_files dictionary'''

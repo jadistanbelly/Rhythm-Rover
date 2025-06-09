@@ -1,12 +1,12 @@
 import discord
 import asyncio
-from variables import audio_queue, ffmpeg_path, bot, user_audio_files, outro_trigger # Change from variables to configs to run on your own bot
+from variables import audio_queue, ffmpeg_path, bot, user_audio_files, outro_trigger
 from datetime import datetime
 
 # Store user join times to determine when to play outro
 user_join_times = {}
-@bot.event
-async def on_voice_state_update(member, before, after):
+
+async def handle_voice_state_update(member, before, after):
     '''track if user joins voice channel'''
     user_id = str(member.id)
     try:
@@ -30,7 +30,7 @@ async def on_voice_state_update(member, before, after):
                             audio_queue.append(audio_file_path)  # Add to the queue
                             if not bot.voice_clients: # If the bot is not currently playing
                                 await play_next_audio(before.channel) # Play outro
-    except (TypeError, IndexError): # Disconnect bot from Voice Channel if user is missing intro/outro
+    except (TypeError, IndexError, KeyError): # Disconnect bot from Voice Channel if user is missing intro/outro
         voice_client = discord.utils.get(bot.voice_clients, guild=member.guild)
         await voice_client.disconnect()
 
