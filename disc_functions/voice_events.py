@@ -30,7 +30,7 @@ async def handle_voice_state_update(member, before, after):
                             audio_queue.append(audio_file_path)  # Add to the queue
                             if not bot.voice_clients: # If the bot is not currently playing
                                 await play_next_audio(before.channel) # Play outro
-    except (TypeError, IndexError): # Disconnect bot from Voice Channel if user is missing intro/outro
+    except (TypeError, IndexError, KeyError): # Disconnect bot from Voice Channel if user is missing intro/outro
         voice_client = discord.utils.get(bot.voice_clients, guild=member.guild)
         await voice_client.disconnect()
 
