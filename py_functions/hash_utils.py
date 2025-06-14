@@ -10,7 +10,9 @@ def create_stable_hash(title):
 
 def update_hash_lookup(hash_id, original_title, url, output_path):
     """Update the hash lookup file with new entries"""
-    lookup_file = os.path.join(output_path, 'title_hash_lookup.json')
+    # Ensure forward slashes
+    output_path = output_path.replace('\\', '/')
+    lookup_file = os.path.join(output_path, 'title_hash_lookup.json').replace('\\', '/')
     lookup_data = {}
     
     if os.path.exists(lookup_file):
