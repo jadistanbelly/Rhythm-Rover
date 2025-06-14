@@ -13,7 +13,7 @@ load_dotenv()
 outro_trigger = 11 # Set to 11 seconds for testing purposes. Change to desired value in seconds.
 
 # Add path for audio files to save at
-Path = "audio\\"
+Path = "audio/"
 
 # Add owner user id here to run owner specific commands
 Owner = int(os.getenv("OWNER"))
@@ -31,8 +31,8 @@ def load_audio_files():
 # Initial load of audio files
 user_audio_files = load_audio_files()
 
-# Path to ffmpeg.exe
-ffmpeg_path = "C:\\ffmpeg\\tools\\ffmpeg\\bin\\ffmpeg.exe"
+# Path to ffmpeg executable
+ffmpeg_path = "/usr/bin/ffmpeg" if os.name == 'posix' else "C:\\ffmpeg\\tools\\ffmpeg\\bin\\ffmpeg.exe"
 
 bot_token = os.getenv("TOKEN")
 
