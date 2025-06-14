@@ -1,6 +1,14 @@
-from variables import user_audio_files, audio_db 
+from variables import user_audio_files
 
 def sync_db():
-    audio_db['user_audio_paths'] = user_audio_files # Update database
-    audio_db.sync() # Sync database
+    """Sync current user_audio_files to database"""
+    import shelve
+    
+    with shelve.open('audio_paths') as db:
+        db['user_audio_paths'] = dict(user_audio_files)
+        print("Database synced successfully")
+        print(f"Updated {len(user_audio_files)} user entries")
+
+if __name__ == '__main__':
+    sync_db()
 

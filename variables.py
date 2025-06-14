@@ -21,12 +21,15 @@ Owner = int(os.getenv("OWNER"))
 # Queue to manage audio playback order
 audio_queue = deque(maxlen=3)  # Set the queue limit to 3
 
-# Initialize the shelve database
-audio_db = shelve.open('audio_paths.db', writeback=True)
-
-# Load existing data (if any) from dict that maps user IDs to audio file paths
+# Load existing data from dict that maps user IDs to audio file paths
 # Can be altered via request command
-user_audio_files = audio_db.get('user_audio_paths', {})
+def load_audio_files():
+    """Load audio files from database, ensuring fresh data"""
+    with shelve.open('audio_paths') as db:
+        return dict(db.get('user_audio_paths', {}))
+
+# Initial load of audio files
+user_audio_files = load_audio_files()
 
 # Path to ffmpeg.exe
 ffmpeg_path = "C:\\ffmpeg\\tools\\ffmpeg\\bin\\ffmpeg.exe"
