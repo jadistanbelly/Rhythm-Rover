@@ -1,8 +1,5 @@
 test.py
-audio_paths.db.dir
-audio_paths.db.dat
-audio_paths.db.bak
-audio
+audio*
 __pycache__
 .vscode
 .pylintrc
