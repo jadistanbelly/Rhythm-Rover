@@ -630,7 +630,7 @@ requires-dist = [
     { name = "discord-py", specifier = ">=2.6.3,<3" },
     { name = "pynacl", specifier = ">=1.6.2,<2" },
     { name = "python-dotenv", specifier = ">=1.2.2,<2" },
-    { name = "yt-dlp", extras = ["default"], specifier = ">=2026.2.21" },
+    { name = "yt-dlp", extras = ["default"], specifier = ">=2026.3.17" },
 ]
 
 [package.metadata.requires-dev]
