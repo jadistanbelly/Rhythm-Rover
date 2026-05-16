@@ -1,59 +1,85 @@
-'''Edit variables here to change bot.py settings'''
-from collections import deque
-import shelve
-import discord
-from dotenv import load_dotenv
 import os
+import shelve
+from collections import deque
+from pathlib import Path as FilePath
+
+import discord
 from discord.ext import commands
+from dotenv import load_dotenv
 
 load_dotenv()
 
-'''Python variables'''
-# Decide how many seconds needed to trigger outro
-outro_trigger = 11 # Set to 11 seconds for testing purposes. Change to desired value in seconds.
 
-# Add path for audio files to save at
-Path = "audio/"
+def _required_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
 
-# Add owner user id here to run owner specific commands
-Owner = int(os.getenv("OWNER"))
 
-# Queue to manage audio playback order
+def _optional_int_env(name: str) -> int | None:
+    value = os.getenv(name)
+    if not value:
+        return None
+    try:
+        return int(value)
+    except ValueError as exc:
+        raise RuntimeError(f"{name} must be an integer") from exc
+
+
+def _optional_guilds(*names: str) -> list[discord.Object]:
+    guilds = []
+    for name in names:
+        guild_id = _optional_int_env(name)
+        if guild_id is not None:
+            guilds.append(discord.Object(id=guild_id))
+    return guilds
+
+
+def _audio_path() -> str:
+    audio_dir = FilePath(os.getenv("AUDIO_DIR", "audio"))
+    return f"{audio_dir.as_posix().rstrip('/')}/"
+
+
+outro_trigger = int(os.getenv("OUTRO_TRIGGER_SECONDS", "11"))
+Path = _audio_path()
+
+Owner = _optional_int_env("OWNER")
+
 audio_queue = deque(maxlen=3)  # Set the queue limit to 3
 
-# Load existing data from dict that maps user IDs to audio file paths
-# Can be altered via request command
+
 def load_audio_files():
     """Load audio files from database, ensuring fresh data"""
-    with shelve.open('audio_paths') as db:
-        return dict(db.get('user_audio_paths', {}))
+    with shelve.open("audio_paths") as db:
+        return dict(db.get("user_audio_paths", {}))
 
-# Initial load of audio files
+
 user_audio_files = load_audio_files()
 
-# Path to ffmpeg executable
-ffmpeg_path = "/usr/bin/ffmpeg" if os.name == 'posix' else "C:\\ffmpeg\\tools\\ffmpeg\\bin\\ffmpeg.exe"
+ffmpeg_path = (
+    "/usr/bin/ffmpeg"
+    if os.name == "posix"
+    else "C:\\ffmpeg\\tools\\ffmpeg\\bin\\ffmpeg.exe"
+)
 
-bot_token = os.getenv("TOKEN")
+bot_token = _required_env("TOKEN")
 
-'''Discord variables'''
-# Intitialize bot and tree
-bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), 
-                   intents=discord.Intents.all())  # commands.when_mentioned_or("!") is used to make the bot respond to !ping and @bot ping
-tree= bot.tree
+intents = discord.Intents.default()
+intents.members = True
+intents.message_content = True
+intents.voice_states = True
 
-'''OPTIONAL'''
-# Add server ids you would like to target for your commands 
-# You will need to uncomment the guilds line in the command decorators located in disc_functions
-#servers=[
-#    discord.Object(id="server id in integer format"), # Personal Server
-#    discord.Object(id="server id in integer format") # Friends Server
-#]
+bot_options = {}
+if Owner is not None:
+    bot_options["owner_id"] = Owner
 
-servers=[
-    discord.Object(id=int(os.getenv("PRSSERVER"))), # Personal Server
-    discord.Object(id=int(os.getenv("FRSERVER"))) # Friends Server
-]
+bot = commands.Bot(
+    command_prefix=commands.when_mentioned_or("!"),
+    intents=intents,
+    **bot_options,
+)
+tree = bot.tree
 
-server = discord.Object(id=int(os.getenv("PRSSERVER")))
-
+servers = _optional_guilds("PRSSERVER", "FRSERVER")
+server = servers[0] if servers else None

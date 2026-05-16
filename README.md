@@ -1,6 +1,6 @@
 # Rhythm Rover
 
-Rythm Rover is a Discord bot that plays audio files when users join or leave a voice channel. Users can register an intro or outro using `/intro` or `/outro` commands. They can also completely wipe any saved audio by using the `/delete` command.
+Rhythm Rover is a Discord bot that plays audio files when users join or leave a voice channel. Users can register an intro or outro using `/intro` or `/outro` commands. They can also completely wipe any saved audio by using the `/delete` command.
 
 Intro Example            |  Outro Example
 :-------------------------:|:-------------------------:
@@ -17,12 +17,17 @@ Intro Example            |  Outro Example
 
 1. **Setup:**
    - Clone the repository.
-   - Install the required dependencies using the given requirements.txt file.
-   - Get the bot token and setup [intents](https://github.com/jadistanbelly/Rhythm-Rover?tab=readme-ov-file#oauth2) on Developer Portal.
-   - Configure the bot token and other settings in `configs.py`.
+   - Install Python 3.12 and ffmpeg.
+   - Install [uv](https://docs.astral.sh/uv/).
+   - Install the required dependencies with `uv sync`.
+   - Copy `.env.example` to `.env`.
+   - Set `TOKEN` to your Discord bot token.
+   - Set `OWNER` to your Discord user ID if you use the owner-only `!sync` command.
+   - Optionally set `PRSSERVER`, `FRSERVER`, `AUDIO_DIR`, and `OUTRO_TRIGGER_SECONDS`.
+   - Enable only the required [intents](https://github.com/jadistanbelly/Rhythm-Rover?tab=readme-ov-file#oauth2) in the Developer Portal.
 
 2. **Running the Bot:**
-   - Start the bot using `python bot.py`.
+   - Start the bot using `uv run bot.py`.
 
 3. **Commands:**
    - `/intro`: Register an intro audio clip.
@@ -43,25 +48,33 @@ Intro Example            |  Outro Example
 
 ## OAuth2
 
-| Permissions                  | Privileged Gateway Intents | Scopes                 |
-|------------------------------|----------------------------|------------------------|
-| Create Events                | Presence Intent            | applications.commands  |
-| Create Expressions           | Message Content Intent     | bot                    |
-| Read Messages/View Channels  | Server Members Intent      |                        |
-| Mention @everyone, @here, and All Roles |                            |                        |
-| Use Application Commands     |                            |                        |
-| Send Messages                |                            |                        |
-| Connect                      |                            |                        |
-| Speak                        |                            |                        |
-| Use Voice Activity           |                            |                        |
+| Permissions                 | Privileged Gateway Intents           | Scopes                 |
+|-----------------------------|--------------------------------------|------------------------|
+| Read Messages/View Channels | Server Members Intent                | applications.commands  |
+| Use Application Commands    | Message Content Intent for `!sync`   | bot                    |
+| Send Messages               |                                      |                        |
+| Connect                     |                                      |                        |
+| Speak                       |                                      |                        |
+| Use Voice Activity          |                                      |                        |
 
 **Note:**
 
-All these permissions are likely not required I initially was testing various features and used these intents.
+Presence Intent is not required. Message Content Intent is only needed while the prefix-based `!sync` command exists.
 
-Here is the authorization link used:
+Use the Discord Developer Portal URL generator with the listed scopes and permissions. Avoid reusing older invite links that include broad permissions from testing.
 
-[https://discord.com/oauth2/authorize?client_id=(**INPUT_YOUR_CLIENT_ID_HERE**)&permissions=**26390463384576**&scope=**applications.commands+bot**](https://discord.com/oauth2/authorize?client_id=(INPUT_YOUR_CLIENT_ID_HERE)&permissions=26390463384576**&scope=applications.commands+bot)
+Example format:
+
+`https://discord.com/oauth2/authorize?client_id=INPUT_YOUR_CLIENT_ID_HERE&permissions=36703232&scope=applications.commands+bot`
+
+## Development
+
+```bash
+uv sync --all-groups
+uv run --locked ruff check .
+uv run --locked pytest
+uv run --locked pip-audit -r <(uv export --locked --format requirements-txt --no-dev --no-hashes)
+```
 
 ## Contributing
 

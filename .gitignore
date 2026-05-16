@@ -1,9 +1,11 @@
 test.py
-audio*
+/audio/
+/audio_paths*
 __pycache__
 .vscode
 .pylintrc
 venv
+.venv
 .env
 py_functions\__pycache__
 __*
