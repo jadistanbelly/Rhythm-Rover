@@ -6,7 +6,7 @@ dependencies = [
     "discord.py>=2.6.3,<3",
     "pynacl>=1.6.2,<2",
     "python-dotenv>=1.2.2,<2",
-    "yt-dlp[default]>=2026.02.21",
+    "yt-dlp[default]>=2026.3.17",
 ]
 
 [dependency-groups]
