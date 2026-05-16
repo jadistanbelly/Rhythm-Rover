@@ -1,51 +1,60 @@
-import discord
 import asyncio
-from variables import audio_queue, ffmpeg_path, bot, user_audio_files, outro_trigger
 from datetime import datetime
+from pathlib import Path as FilePath
+
+import discord
+
+from variables import audio_queue, bot, ffmpeg_path, outro_trigger, user_audio_files
 
 # Store user join times to determine when to play outro
 user_join_times = {}
 
 async def handle_voice_state_update(member, before, after):
-    '''track if user joins voice channel'''
+    """Track voice-channel joins and leaves for intro/outro playback."""
     user_id = str(member.id)
     try:
-        if before.channel != after.channel: # User joined or left a voice channel
-            if after.channel:  # User joined a voice channel
-                user_join_times[user_id] = datetime.now() # Store the time user joined
-                if user_id in user_audio_files: # Check if user exists
-                    audio_file_path = user_audio_files[user_id][0] # Get intro path
-                    audio_queue.append(audio_file_path)  # Add to the queue
-                    if audio_queue and not bot.voice_clients and len(audio_queue) > 0: # If the queue is not empty and the bot is not currently playing
-                        await play_next_audio(after.channel) # Play intro
+        if before.channel == after.channel:
+            return
 
-                '''play audio when user leaves voice channel'''
-            else: # User left a voice channel
-                if user_id in user_audio_files: # Check if user exists
-                    join_time = user_join_times[user_id] # Get user join time
-                    leave_time = datetime.now() # Get user leave time
-                    difference = (leave_time - join_time).seconds # Calculate difference in seconds
-                    if difference > outro_trigger: # Change outro_trigger to determine when to play outro in configs.py
-                            audio_file_path = user_audio_files[user_id][1] # Get outro path
-                            audio_queue.append(audio_file_path)  # Add to the queue
-                            if not bot.voice_clients: # If the bot is not currently playing
-                                await play_next_audio(before.channel) # Play outro
-    except (TypeError, IndexError, KeyError): # Disconnect bot from Voice Channel if user is missing intro/outro
+        if after.channel:
+            user_join_times[user_id] = datetime.now()
+            audio_file_path = user_audio_files.get(user_id, [None, None])[0]
+            if audio_file_path:
+                audio_queue.append(audio_file_path)
+                if not bot.voice_clients:
+                    await play_next_audio(after.channel)
+            return
+
+        join_time = user_join_times.pop(user_id, None)
+        audio_file_path = user_audio_files.get(user_id, [None, None])[1]
+        if join_time is None or not audio_file_path:
+            return
+
+        difference = (datetime.now() - join_time).seconds
+        if difference > outro_trigger:
+            audio_queue.append(audio_file_path)
+            if not bot.voice_clients:
+                await play_next_audio(before.channel)
+    except (TypeError, IndexError, KeyError):
         voice_client = discord.utils.get(bot.voice_clients, guild=member.guild)
-        await voice_client.disconnect()
+        if voice_client:
+            await voice_client.disconnect()
 
 async def play_next_audio(channel):
-    '''play audio in queue'''
-    while audio_queue: # While the queue is not empty
-        audio_file_path = audio_queue.popleft() # Get the first item in the queue
+    """Play audio in queue."""
+    while audio_queue:
+        audio_file_path = audio_queue.popleft()
+        if not audio_file_path or not FilePath(audio_file_path).exists():
+            continue
+
         try:
-            vc = await channel.connect() # Connect to voice channel
-        except discord.ClientException: # If the bot is already in a voice channel
-            vc = channel.guild.voice_client # Get the voice client
-        await asyncio.sleep(0.5) # Wait 0.5 second before playing for bot to join channel
-        vc.play(discord.FFmpegPCMAudio(executable=ffmpeg_path, source=audio_file_path)) # Play audio
-        print(f'Currently Playing: {audio_file_path}',
-              f'Queue total: {len(audio_queue)}') # Show what is playing and queue length
-        while vc.is_playing(): # Check if audio is playing
-            await asyncio.sleep(1) # Wait for audio to finish
-        await vc.disconnect() # Disconnect
+            vc = await channel.connect()
+        except discord.ClientException:
+            vc = channel.guild.voice_client
+
+        await asyncio.sleep(0.5)
+        vc.play(discord.FFmpegPCMAudio(executable=ffmpeg_path, source=audio_file_path))
+        print(f"Currently Playing: {audio_file_path}", f"Queue total: {len(audio_queue)}")
+        while vc.is_playing():
+            await asyncio.sleep(1)
+        await vc.disconnect()

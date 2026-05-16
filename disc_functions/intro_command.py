@@ -1,34 +1,44 @@
 import asyncio
-import concurrent.futures
+import logging
+from pathlib import Path as FilePath
+
 import discord
 from discord import app_commands
-import os
+
+from py_functions.audio_files import safe_remove_audio_file
 from py_functions.download_audio import download_audio
-from py_functions.totalseconds import totalseconds
 from py_functions.sync_db import sync_db
-from variables import Path, user_audio_files, tree 
+from py_functions.validation import normalize_clip_request
+from variables import Path, tree, user_audio_files
 
-async def download_and_store_audio(video_url: str, start: int, end: int, user_id: str):
-    '''download users intro audio and store in user_audio_files dictionary'''
-    loop = asyncio.get_running_loop()
+logger = logging.getLogger(__name__)
+
+
+async def download_and_store_audio(video_url: str, start: str, end: str, user_id: str):
+    """Download a user's intro audio and store it in user_audio_files."""
     try:
-        if end - start > 10: # If audio is longer than 10 seconds
-            end = start + 10 # Set end to 10 seconds
+        video_url, start_seconds, end_seconds = normalize_clip_request(video_url, start, end)
+        audio_title = await asyncio.to_thread(
+            download_audio,
+            video_url,
+            Path,
+            start_seconds,
+            end_seconds,
+        )
+        audio_path = str(FilePath(Path) / f"{audio_title}.mp3")
 
-        with concurrent.futures.ThreadPoolExecutor() as pool:
-            audio_title = await loop.run_in_executor(pool, download_audio, video_url, Path, start, end) # Download audio
-        audio_path = f'{Path}{audio_title}.mp3' # Create audio path
+        user_audio_files.setdefault(user_id, [None, None])
+        safe_remove_audio_file(user_audio_files[user_id][0], Path)
+        user_audio_files[user_id][0] = audio_path
 
-        if user_id in user_audio_files: # Check if user exists
-            if user_audio_files[user_id][0]: # Check if user already has intro
-                os.remove(user_audio_files[user_id][0]) # Delete old intro
-            user_audio_files[user_id][0] = audio_path # Store new intro
+        sync_db()
+        return audio_path
+    except ValueError as exc:
+        return str(exc)
+    except Exception:
+        logger.exception("Failed to store intro audio")
+        return "Failed to download intro audio. Check the URL and timestamps, then try again."
 
-        sync_db() # Update database
-
-        return audio_path # Return new audio path
-    except Exception as e:
-        return str(e)
 
 @tree.command(
     name="intro",
@@ -37,19 +47,14 @@ async def download_and_store_audio(video_url: str, start: int, end: int, user_id
 )
 @app_commands.describe(video_url="Type your url", start="Where do you want to start the download?", end="Where do you want to end the download?")
 async def intro(interaction: discord.Interaction, video_url: str, start: str, end: str):
-    ''' intro function for users to change intro audio triggered by the /intro command'''
-    start = totalseconds(start) # Convert timestamps to only seconds
-    end = totalseconds(end) # Convert timestamps to only seconds
-    user_id = str(interaction.user.id) # Get user ID
+    """Register intro audio for the current user."""
+    user_id = str(interaction.user.id)
 
-    if user_id not in user_audio_files: # If user not in keys then add them
-        user_audio_files[user_id] = [None, None] 
+    await interaction.response.defer(ephemeral=True)
 
-    await interaction.response.defer(ephemeral=True) # Defer response
+    audio_path = await download_and_store_audio(video_url, start, end, user_id)
 
-    audio_path = await download_and_store_audio(video_url, start, end, user_id) # Download and store audio path
-
-    if os.path.exists(audio_path): # Check if audio path leads to a file
+    if FilePath(audio_path).exists():
         await interaction.edit_original_response(content="Your intro has been added")
     else:
         await interaction.edit_original_response(content=f"Error:{audio_path}")

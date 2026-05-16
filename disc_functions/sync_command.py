@@ -1,5 +1,7 @@
-from variables import bot 
 from discord.ext import commands
+
+from variables import bot
+
 
 # Define the sync command        
 @bot.command()

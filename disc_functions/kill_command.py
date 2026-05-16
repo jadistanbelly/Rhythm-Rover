@@ -1,6 +1,7 @@
-from variables import tree, bot 
-from disc_functions.voice_events import audio_queue
 import discord
+
+from variables import audio_queue, bot, tree
+
 
 # Define the kill command
 @tree.command(
@@ -10,14 +11,15 @@ import discord
 )
 
 async def kill(interaction):
-    '''Command to clear queue and prevent spamming'''
+    """Clear the playback queue and stop the current voice client."""
     try:
-        audio_queue.clear() # Clear queue
-        voice_client = discord.utils.get(bot.voice_clients, guild=interaction.channel.guild) # Find where the bot is
-        if voice_client.is_playing(): # Check if bot is playing
-            voice_client.stop() # Stop the bot
-        await interaction.response.send_message('Queue Cleared',
-                                                ephemeral = True)
+        audio_queue.clear()
+        voice_client = discord.utils.get(bot.voice_clients, guild=interaction.guild)
+        if voice_client and voice_client.is_playing():
+            voice_client.stop()
+        await interaction.response.send_message("Queue Cleared", ephemeral=True)
     except Exception as e:
-        await interaction.response.send_message(f'Clearing failed. Error: {e}',
-                                                ephemeral = True)
+        await interaction.response.send_message(
+            f"Clearing failed. Error: {e}",
+            ephemeral=True,
+        )
